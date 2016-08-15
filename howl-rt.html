@@ -1,0 +1,160 @@
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<title>Howl Times</title>
+</head>
+<body>
+  <div class="container">
+
+  <p>How many loops have you run?</p>
+
+  <div class="btn-group1">
+  </div>
+  <div class="btn-group2">
+  </div>
+  <div class="btn-group3">
+  </div>
+  <div class="btn-group4">
+  </div>
+
+  <p id="recalc"></p>
+
+  <div id="left"></div>
+
+  <div id="exittest">
+<h2>Test Mode</h2>
+<p class="text-info" id="endtime"></p>
+<button class="btn btn-warning" id="btnexit">Exit test mode</button>
+</div>
+
+<script>
+
+
+$( function() {
+  var text = "";
+  for (i = 1; i <= 20; i++) {
+    text += "<button type=\"button\" class=\"btn btn-primary loopbtn\">" + i + "</button>";
+    if (i % 5 == 0) {
+      $(".btn-group" + i/5).html(text);
+      text = "";
+    }
+  }
+  $( ".loopbtn" ).click(timedone);
+  $( "#exittest").hide();
+  updateTime();
+});
+</script>
+<p id="now"></p>
+<p id="end"></p>
+<p id="demo"></p>
+
+<script>
+function timedone() {
+  var now = new Date();
+  var elapsed = 60*60*8 - (end.getTime() - now.getTime())/1000;
+  var loops = $(this).text();
+  var pace = elapsed/(loops*loop);
+  var text = "<p>Your pace so far: " + time(elapsed / ($(this).text() * loop)) + "/mi";
+  var left = (end.getTime() - now.getTime())/1000;
+  var miles = (left/pace);
+  var total = $(this).text() * loop;
+  if (miles >= 1) {
+    text += "<br>At this pace, you can still run: ";
+    if (miles > loop) {
+        var moreloops = Math.floor(miles/loop);
+        miles -= moreloops * loop;
+        text += moreloops + " loops";
+        total += moreloops * loop;
+        if (miles >= 1) {
+          text += " and ";
+        }
+    }
+    if (miles >= 1) {
+      text += Math.floor(miles) + " OBs";
+      total += Math.floor(miles);
+    }
+  } else {
+    text += "<br>At this pace, you're done!";
+  }
+  text += "<br>... for a total distance of " + total.toFixed(2) + " miles!</p>";
+  $( "#recalc" ).html(time(elapsed) + " elapsed" + text);
+  $( ".loopbtn" ).removeClass("btn-success").addClass("btn-primary");
+  $(this).removeClass("btn-primary").addClass("btn-success");
+}
+
+function exittest() {
+  end = new Date(2016,7,13,15,30);
+  $("#exittest").hide();
+  $( ".loopbtn" ).removeClass("btn-success").addClass("btn-primary");
+  $("#recalc").text('');
+  updateTime();
+}
+
+function time(t) {
+  var text = "";
+  if (t > 3600) {
+    text = Math.floor(t/3600) + ":";
+    t = t % 3600;
+  }
+  var mins = Math.floor(t/60);
+  if (mins < 10 && text != "") {
+    text += "0";
+  }
+  text += mins + ":";
+  var secs = t % 60;
+  if (secs < 10) {
+    text += "0";
+  }
+  text += Math.floor(secs);
+  return text;
+}
+end = new Date(2016,7,13,15,30);
+const loop = 3.29;
+
+function testMode() {
+  end = new Date();
+  end.setHours(end.getHours() + 4);
+  $(".loopbtn").prop('disabled',false).click(timedone);
+  $("#endtime").text('Testing with Howl ending at ' + end);
+  $("#exittest").show();
+  $('#btnexit').click(exittest);
+  $('#recalc').html('');
+  updateTime();
+}
+
+function updateTime() {
+  var now = new Date();
+
+  var left = (end.getTime() - now.getTime())/1000;
+
+  if (left > 60*60*8 || left < 0) {
+      var html = '<p class="warning">Howl ';
+      if (left < 0) {
+        html += ' has finished!';
+      } else {
+        html += ' will start in ' + time(left - 60*60*8) + '.';
+      }
+      html += '</p><button class="btn btn-warning" id="testmode">Enter test mode</button>';
+      $(".loopbtn").prop('disabled',true).off();
+      $("#left").html(html);
+      $("#testmode").click(testMode);
+      setTimeout(updateTime,1000);
+      return;
+  }
+
+  var text = "<p>" + time(left) + " left<br>";
+  text += "You can still run:<br>";
+  for (i = Math.ceil(left/(3.29*20*60)); i < left/(3.29*6*60); i++) {
+    if (i < 1) {
+      continue;
+    }
+    text += i + " loops at " + time(left/(i*loop)) + "/mi<br>"
+  }
+  $("#left").html(text);
+  setTimeout(updateTime,1000);
+}
+</script>
